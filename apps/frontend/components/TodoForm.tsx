@@ -8,7 +8,7 @@ const TodoForm = () => {
       title: formData.get("title"),
     };
 
-    const response = await fetch("http://localhost:8000/todos", {
+    const response = await fetch(`${process.env.APP_URL}/todos`, {
       method: "POST",
       body: JSON.stringify(formValues),
       headers: {

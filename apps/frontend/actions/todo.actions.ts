@@ -5,7 +5,7 @@ export async function getTodo(id: string) {
   "use cache";
   cacheLife("hours");
   cacheTag(`todo:${id}`);
-  const todoResponse = await fetch(`http://localhost:8000/todo/${id}`);
+  const todoResponse = await fetch(`${process.env.APP_URL}/todo/${id}`);
   if (!todoResponse.ok) {
     return { success: false };
   }
@@ -13,7 +13,7 @@ export async function getTodo(id: string) {
 }
 
 export const toggleCompleteStatus = async (id: number) => {
-  const todoResponse = await fetch(`http://localhost:8000/todo/${id}/toggle`, {
+  const todoResponse = await fetch(`${process.env.APP_URL}/todo/${id}/toggle`, {
     method: "PATCH",
   });
   updateTag(`todo:${id}`);

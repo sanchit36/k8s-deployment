@@ -7,8 +7,6 @@ const TodoList = async () => {
   cacheLife("hours");
   cacheTag("todos");
 
-  console.log("process.env.API_URL:: ", process.env.API_URL);
-
   const todosResponse = await fetch(`${process.env.API_URL}/todos`);
   if (!todosResponse.ok) {
     return <p>Error: Fetching todos list...</p>;
