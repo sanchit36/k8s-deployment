@@ -1,0 +1,82 @@
+name: Build, Test, and Push Docker Images
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/api-server
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/frontend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------------------------------
+      # CHECKOUT REPO
+      # ----------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------
+      # DOCKER LOGIN TO GHCR
+      # ----------------------------------------------------
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      # ----------------------------------------------------
+      # BUILD API-SERVER DOCKER IMAGE
+      # ----------------------------------------------------
+      - name: Build API server image
+        run: |
+          cd apps/api-server
+          docker build -t $API_IMAGE:latest .
+
+      # ----------------------------------------------------
+      # START API CONTAINER INSIDE CI (NEEDED FOR FRONTEND BUILD)
+      #
+      # This makes http://localhost:8000 available for NEXTJS
+      # during build-time (getStaticProps, getServerSideProps).
+      # ----------------------------------------------------
+      - name: Start API container for local build-time access
+        run: |
+          docker run -d --name api-server -p 8000:8000 $API_IMAGE:latest
+          echo "Waiting for API server to boot..."
+          sleep 5
+          curl -s http://localhost:8000/health || (echo "API failed to start" && exit 1)
+
+      # ----------------------------------------------------
+      # BUILD FRONTEND DOCKER IMAGE
+      # This step builds Next.js using the running local API.
+      # ----------------------------------------------------
+      - name: Build frontend image
+        env:
+          API_BASE_URL: "http://localhost:8000"
+        run: |
+          cd apps/frontend
+          # Install deps & build NEXTJS
+          npm ci
+          npm run build
+
+          # Now build frontend Docker image (production)
+          docker build -t $FRONTEND_IMAGE:latest .
+
+      # ----------------------------------------------------
+      # STOP API CONTAINER AFTER NEXTJS BUILD
+      # ----------------------------------------------------
+      - name: Cleanup API container
+        run: |
+          docker stop api-server
+          docker rm api-server
+
+      # ----------------------------------------------------
+      # PUSH IMAGES TO GHCR
+      # ----------------------------------------------------
+      - name: Push API image to GHCR
+        run: docker push $API_IMAGE:latest
+
+      - name: Push Frontend image to GHCR
+        run: docker push $FRONTEND_IMAGE:latest
