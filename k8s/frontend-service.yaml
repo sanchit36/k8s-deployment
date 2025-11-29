@@ -3,9 +3,11 @@ kind: Service
 metadata:
   name: frontend
 spec:
+  type: NodePort
   selector:
     app: frontend
   ports:
-    - port: 3000
-      targetPort: 3000
-  type: ClusterIP
+    - protocol: TCP
+      port: 3000 # internal cluster port
+      targetPort: 3000 # container port
+      nodePort: 30080 # NodePort for macOS host access

@@ -14,9 +14,11 @@ spec:
       labels:
         app: api-server
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: api-server
-          image: ghcr.io/sanchit36/k8s-deployment/api-server:latest
+          image: ghcr.io/sanchit36/api-server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

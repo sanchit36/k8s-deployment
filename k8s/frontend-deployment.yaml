@@ -14,9 +14,11 @@ spec:
       labels:
         app: frontend
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: frontend
-          image: ghcr.io/sanchit36/k8s-deployment/frontend:latest
+          image: ghcr.io/sanchit36/frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
