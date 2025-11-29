@@ -2,10 +2,12 @@ import express from "express";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
+import morgan from "morgan";
 
 const app = express();
 app.use(express.json());
 app.use(cors()); // Enable CORS
+app.use(morgan("tiny"));
 
 const PORT = 8000;
 
@@ -30,6 +32,20 @@ function writeDB(data) {
 // Health check
 app.get("/health", (req, res) => {
   return res.json({ success: true });
+});
+
+// Create Todo
+app.post("/todos", (req, res) => {
+  const db = readDB();
+  if (!req.body?.title) {
+    return res.status(400).json({ success: false });
+  }
+  const todo = { id: Date.now(), ...req.body, completed: false };
+  db.todos.push(todo);
+
+  writeDB(db);
+
+  return res.json({ success: true, data: { todo: todo } });
 });
 
 // Get all todos
