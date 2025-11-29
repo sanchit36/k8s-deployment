@@ -26,4 +26,4 @@ spec:
             - name: NODE_ENV
               value: "production"
             - name: API_URL
-              value: "http://api-server:4000"
+              value: "http://api-server:8000"
